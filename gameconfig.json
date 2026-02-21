@@ -1,4 +1,10 @@
 {
-  "maxDragDistance": 5,
-  "maxLaunchForce": 10
+  "dragDistance": { "min": 20, "max": 150 },
+  "maxLaunchForce": 10,
+  "maxLaunchForceDistance": 150,
+  "barrelDefaultRotationDeg": -30,
+  "textures": {
+    "projectile": { "path": "ball.png", "w": 50, "h": 50 }
+  }
+  
 }

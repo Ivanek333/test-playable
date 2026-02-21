@@ -18,3 +18,5 @@ lerna-debug.log*
 
 tmp/
 temp/
+
+stats.json
