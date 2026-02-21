@@ -1,0 +1,17 @@
+✓ Build the castle
+- Add block damage and destruction
+- Block input after firing
+- Draw arts for background and target
+- Place background
+- Place target
+- Make winning screen
+- Make losing screen
+- ! Aiming parabola
+- ! Power indicator
+- ! Tutorial
+- Distance the castle and the cannon
+- Drag area
+- Ammo left bar
+- Sounds
+- Better drag area 
+- Additional effects (fuse, recoil, breaking)

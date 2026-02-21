@@ -5,26 +5,9 @@ import { GameManager } from './Components/GameManager';
 import { OrientationManager } from './utils/OrientationHandler';
 import { loadAllTextures } from './utils/AssetManager';
 
-type ConfigTexture = { path: string, w: number, h: number}
-
-declare global {
-  interface Window {
-    GAME_CONFIG: {
-      dragDistance: { min: number, max: number };
-      maxLaunchForce: number;
-      maxLaunchForceDistance: number;
-      barrelDefaultRotationDeg: number;
-      textures: {
-        projectile: ConfigTexture;
-      };
-    };
-  }
-}
-
-const design_width = 800;
-const design_height = 600;
-
 async function init() {
+  const design_width = window.conf.designResolution.w;
+  const design_height = window.conf.designResolution.h;
   await OrientationManager.getInstance().enforceLandscape();
   await loadAllTextures();
   const app = new Pixi.Application();

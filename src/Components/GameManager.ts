@@ -38,15 +38,19 @@ export class GameManager {
   }
 
   private createBoundaries(): void {
-    const groundY = this.designHeight - 20;
+    const groundHeight = 30;
+    const groundY = this.designHeight - groundHeight;
     const groundWidth = this.designWidth + 1000;
     const ground = Matter.Bodies.rectangle(
       this.designWidth / 2,
-      groundY,
+      groundY + groundHeight / 2,
       groundWidth,
-      20,
+      groundHeight,
       { isStatic: true, restitution: 0.5, label: 'ground' }
     );
+
+    const groundSprite = new Pixi.Graphics().rect(-500, groundY, this.designWidth + 1000, groundHeight).fill(0x228B22);
+    this.container.addChild(groundSprite);
 
     const leftWall = Matter.Bodies.rectangle(
       -300,
@@ -65,40 +69,19 @@ export class GameManager {
     );
 
     Matter.World.add(this.world, [ground, leftWall, rightWall]);
-
-    const groundSprite = new Pixi.Graphics().rect(-500, groundY - 10, this.designWidth + 1000, 20).fill(0x228B22);
-    this.container.addChild(groundSprite);
   }
 
   private createCastle(): void {
-    const blockWidth = 60;
-    const blockHeight = 30;
-    const startX = 500;
-    const startY = 500;
-    
-    for (let i = 0; i < 3; i++) {
-      const x = startX + i * blockWidth;
-      const y = startY;
-      const block = new Block(this.app, this.container, this.world, x, y, blockWidth, blockHeight);
+    const start = window.conf.positions.castle;
+    window.conf.blocks.forEach(data => {
+      const block = new Block(this.app, this.container, this.world, data.t, data.x + start.x, -data.y + start.y, data.r, data.d);
       this.castleBlocks.push(block);
       this.gameObjects.add(block);
-    }
-    
-    for (let i = 0; i < 2; i++) {
-      const x = startX + blockWidth / 2 + i * blockWidth;
-      const y = startY - blockHeight;
-      const block = new Block(this.app, this.container, this.world, x, y, blockWidth, blockHeight);
-      this.castleBlocks.push(block);
-      this.gameObjects.add(block);
-    }
-
-    const top = new Block(this.app, this.container, this.world, startX + blockWidth, startY - blockHeight * 2, blockWidth, blockHeight);
-    this.castleBlocks.push(top);
-    this.gameObjects.add(top);
+    });
   }
 
   private createCannon(): void {
-    this.cannon = new Cannon(this.app, this.container, this.world, 100, 550, this.onProjectileFire.bind(this));
+    this.cannon = new Cannon(this.app, this.container, this.world, this.onProjectileFire.bind(this));
     this.gameObjects.add(this.cannon);
   }
 

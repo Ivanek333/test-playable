@@ -46,9 +46,7 @@ export function getTextureFromConfigPath(configPath: string): Pixi.Texture | nul
 
 export function createFallbackTexture(
   app: Pixi.Application,
-  draw: (g: Pixi.Graphics) => void,
-  width: number,
-  height: number
+  draw: (g: Pixi.Graphics) => void
 ): Pixi.Texture {
   const graphics = new Pixi.Graphics();
   draw(graphics);
