@@ -20,8 +20,8 @@ export class Tween {
   private pausedTime: number = 0;
   private isPaused: boolean = false;
   private isFinished: boolean = false;
-  private startValues: Record<string, number> = {};
-  private targetValues: Record<string, number> = {};
+  public startValues: Record<string, number> = {};
+  public targetValues: Record<string, number> = {};
   private currentValues: Record<string, number> = {};
   public onUpdateCallback?: (obj: any) => void;
   public onCompleteCallback?: () => void;

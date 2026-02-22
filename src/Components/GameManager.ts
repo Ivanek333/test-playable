@@ -9,12 +9,15 @@ import { PowerIndicator } from './PowerIndicator';
 import { Tutorial } from './Tutorial';
 import { TweenManager } from '../utils/Tween';
 import { Target } from './Target';
+import { GameOverlay } from './GameOverlay';
 
 export class GameManager {
   private app: Pixi.Application;
   private container: Pixi.Container;
   private designWidth: number;
   private designHeight: number;
+  private leftWorld: number;
+  private rightWorld: number;
   private engine: Matter.Engine;
   private world: Matter.World;
   private tweenManager: TweenManager;
@@ -23,10 +26,12 @@ export class GameManager {
   private blockMap: Map<number, Block> = new Map(); 
   private castleBlocks: Set<Block> = new Set();
   private fixedTimeStep = 16.667;
+  private lastUpdate: number;
   private aimParabola: AimParabola;
   private powerIndicator: PowerIndicator;
   private tutorial: Tutorial;
   private target: Target;
+  private gameOverlay: GameOverlay;
 
   constructor(app: Pixi.Application, container: Pixi.Container, designWidht: number, designHeight: number) {
     this.app = app;
@@ -34,12 +39,21 @@ export class GameManager {
     this.designWidth = designWidht;
     this.designHeight = designHeight;
     this.tweenManager = new TweenManager();
+    this.gameOverlay = new GameOverlay(this.tweenManager);
     this.engine = Matter.Engine.create({
       gravity: { x: 0, y: 1 },
-      enableSleeping: false
+      enableSleeping: false,
+      positionIterations: 12,
+      velocityIterations: 6,
+      constraintIterations: 4
     });
     this.world = this.engine.world;
     // Matter.Engine.update(this.engine, 1000/60, 10);
+    
+    this.leftWorld = -container.x / container.scale.x;
+    this.rightWorld = (window.innerWidth - this.container.x) / this.container.scale.x;
+    window.conf.positions.cannon.x += this.leftWorld;
+    window.conf.positions.castle.x += this.rightWorld;
 
     this.createBoundaries();
     this.createCastle();
@@ -53,10 +67,11 @@ export class GameManager {
     Matter.Events.on(this.engine, 'collisionStart', this.onCollisionStart.bind(this));
     this.app.ticker.add(this.update.bind(this));
     this.tutorial.startTutorial();
+    this.lastUpdate = performance.now();
   }
 
   private createBoundaries(): void {
-    const groundHeight = 30;
+    const groundHeight = window.conf.groundHeight;
     const groundY = this.designHeight - groundHeight;
     const groundWidth = this.designWidth + 1000;
     const ground = Matter.Bodies.rectangle(
@@ -71,7 +86,7 @@ export class GameManager {
     this.container.addChild(groundSprite);
 
     const leftWall = Matter.Bodies.rectangle(
-      -300,
+      -500,
       this.designHeight / 2,
       20,
       this.designHeight + 600,
@@ -79,7 +94,7 @@ export class GameManager {
     );
 
     const rightWall = Matter.Bodies.rectangle(
-      this.designWidth + 300,
+      this.designWidth + 500,
       this.designHeight / 2,
       20,
       this.designHeight + 600,
@@ -90,9 +105,8 @@ export class GameManager {
   }
 
   private createCastle(): void {
-    const start = window.conf.positions.castle;
     window.conf.blocks.forEach(data => {
-      const block = new Block(this.app, this.container, this.world, data.t, data.x + start.x, -data.y + start.y, data.r, data.d);
+      const block = new Block(this.app, this.container, this.world, data.t, data.x + window.conf.positions.castle.x, -data.y + window.conf.positions.castle.y, data.r, data.d);
       this.registerBlock(block);
     });
   }
@@ -101,7 +115,7 @@ export class GameManager {
     this.cannon = new Cannon(
       this.app, 
       this.container, 
-      this.world, 
+      this.world,
       this.onProjectileFire.bind(this),
       this.onAmmoSpent.bind(this), 
       this.aimParabola, 
@@ -137,10 +151,15 @@ public removeBlock(blockObject: GameObject): void {
 }
 
   private update(ticker: Pixi.Ticker): void {
-    const deltaTime = ticker.deltaTime;
-    Matter.Engine.update(this.engine, Math.min(deltaTime, 1.1) * this.fixedTimeStep);
+    const deltaRatio = ticker.deltaTime;
+    if (deltaRatio <= 0.5) {
+      Matter.Engine.update(this.engine, Math.min(deltaRatio, 1) * this.fixedTimeStep);
+      this.gameObjects.forEach(obj => obj.update(deltaRatio));
+    } else for(let i = 0; i < 2; i++) {
+      Matter.Engine.update(this.engine, Math.min(deltaRatio/2, 1) * this.fixedTimeStep);
+      this.gameObjects.forEach(obj => obj.update(deltaRatio));
+    }
     this.tweenManager.update();
-    this.gameObjects.forEach(obj => obj.update(ticker.deltaTime));
   }
 
   private onCollisionStart(event: Matter.IEventCollision<Matter.Engine>): void {
@@ -180,13 +199,12 @@ public removeBlock(blockObject: GameObject): void {
   private onTargetHit(): void {
     this.target.destroy();
     this.gameObjects.delete(this.target);
-    // start async win
-    console.log("YOU WON")
+    this.cannon.stopGaming();
+    this.gameOverlay.show('win');
   }
 
   private onAmmoSpent(): void {
-    // start async lose
-    console.log("YOU LOST")
+    this.gameOverlay.show('lose');
   }
 
   public reset(): void {
@@ -210,5 +228,20 @@ public removeBlock(blockObject: GameObject): void {
   }
   
   public onResize(): void {
+    const lastLeft = this.leftWorld;
+    const lastRight = this.rightWorld;
+    this.leftWorld = -this.container.x / this.container.scale.x;
+    this.rightWorld = (window.innerWidth - this.container.x) / this.container.scale.x;
+    const leftDif = this.leftWorld - lastLeft;
+    const rightDif = this.rightWorld - lastRight;
+    window.conf.positions.cannon.x += leftDif;
+    window.conf.positions.castle.x += rightDif;
+    this.cannon.shift({x: leftDif, y: 0});
+    this.powerIndicator.resize();
+    this.tutorial.shift({x: leftDif, y: 0});
+    this.target.shift({x: rightDif, y: 0});
+    this.castleBlocks.forEach(block => {
+      block.shift({x: rightDif, y: 0});
+    });
   }
 }

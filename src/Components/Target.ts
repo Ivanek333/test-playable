@@ -1,4 +1,4 @@
-import Matter from 'matter-js';
+import Matter, { Vector } from 'matter-js';
 import * as Pixi from 'pixi.js';
 import { GameObject } from './GameObject';
 import { createFallbackTexture, getTextureFromConfigPath } from '../utils/AssetManager';

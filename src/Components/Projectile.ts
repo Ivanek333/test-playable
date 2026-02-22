@@ -21,7 +21,7 @@ export class Projectile extends GameObject {
 
     this.body = Matter.Bodies.circle(x, y, radius, {
       restitution: 0.1,
-      friction: 0.1,
+      friction: 0.3,
       density: window.conf.projectileDensity,
       frictionAir: 0,
       label: 'projectile'
@@ -30,9 +30,9 @@ export class Projectile extends GameObject {
     Matter.World.add(this.world, this.body);
   }
 
-  public fire(force: Matter.Vector): void {
+  public fire(velocity: Matter.Vector): void {
     if (this.body) {
-      Matter.Body.applyForce(this.body, this.body.position, force);
+      Matter.Body.setVelocity(this.body, velocity);
     }
   }
 

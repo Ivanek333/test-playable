@@ -1,4 +1,4 @@
-import Matter from 'matter-js';
+import Matter, { Vector } from 'matter-js';
 import * as Pixi from 'pixi.js';
 
 export abstract class GameObject {
@@ -26,5 +26,10 @@ export abstract class GameObject {
     }
     this.view.destroy({ children: true });
     this.onDestroy(this);
+  }
+
+  public shift(vec: Vector): void {
+    if (this.body)
+      Matter.Body.translate(this.body, vec);
   }
 }

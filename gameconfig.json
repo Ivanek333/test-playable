@@ -1,8 +1,9 @@
 {
-  "designResolution": { "w": 1000, "h": 600},
+  "designResolution": { "w": 1200, "h": 600},
+  "groundHeight": 40,
   "dragDistance": { "min": 20, "max": 150 },
-  "maxLaunchForce": 2,
-  "maxLaunchForceDistance": 150,
+  "maxLaunchPower": 30,
+  "maxLaunchPowerDistance": 150,
   "projectileDensity": 0.005,
   "barrelDefaultAngle": 30,
   "barrelLimitAngle": { "min": -20, "max": 80 },
@@ -22,14 +23,14 @@
     "block_long_damage1": { "path": "block_long1.png", "w": 160, "h": 20 }
   },
   "positions": {
-    "cannon": { "x": 50, "y": 530, "comment": "the following positions are relative to the cannon" },
+    "cannon": { "x": 90, "y": 520, "comment": "the following positions are relative to the cannon" },
     "barrelLocal": { "x": 59, "y": -34 },
     "barrelPivot": { "x": 55, "y": 53 },
     "powerIndicatorLocal": { "x": 35, "y": -60 },
     "powerIndicatorSize": { "x": 50, "y": 10 },
-    "tutorialLocalStart": { "x": 40, "y": -20 },
-    "tutorialLocalEnd": { "x": 10, "y": 40 },
-    "castle": { "x": 400, "y": 570, "comment": "the following positions are relative to the castle" },
+    "tutorialLocalStart": { "x": 60, "y": 0 },
+    "tutorialLocalEnd": { "x": 0, "y": 40 },
+    "castle": { "x": -600, "y": 570, "comment": "the following positions are relative to the castle (and also y in up direction) (for blocks too)" },
     "targetLocal": { "x": 440, "y": 286 }
   },
   "blocks": [

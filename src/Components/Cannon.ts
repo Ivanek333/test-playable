@@ -9,6 +9,7 @@ import { Tutorial } from './Tutorial';
 
 export class Cannon extends GameObject {
   private barrel: Pixi.Container;
+  private dragArea: Pixi.Graphics;
   private power: number = 0;
   private curShots: number = 0;
   private isDragging: boolean = false;
@@ -23,7 +24,7 @@ export class Cannon extends GameObject {
 
   constructor(app: Pixi.Application, 
         container: Pixi.Container,
-        world: Matter.World, 
+        world: Matter.World,
         onFireCallback: (proj: Projectile) => void, 
         onAmmoSpentCallback: () => void,
         aimParabola: AimParabola, 
@@ -59,13 +60,19 @@ export class Cannon extends GameObject {
     const barrelSprite = new Pixi.Sprite(barrelTexture);
     barrelSprite.width = barrelTextureConfig.w;
     barrelSprite.height = barrelTextureConfig.h;
-      
+    
     this.barrel = new Pixi.Container();
     this.barrel.addChild(barrelSprite);
     this.barrel.pivot.set(barrel_pivot.x, barrel_pivot.y);
     this.barrel.position.set(barrel_pos.x, barrel_pos.y);
     this.barrel.zIndex -= 1
     this.view.addChild(this.barrel);
+
+    this.dragArea = new Pixi.Graphics();
+    this.dragArea.position.set(barrel_pos.x, barrel_pos.y);
+    this.dragArea.visible = false;
+    this.view.addChildAt(this.dragArea, 0);
+    this.drawDragArea();
 
     this.body = Matter.Bodies.rectangle(cannon_pos.x, cannon_pos.y, cannonTextureConfig.w, cannonTextureConfig.h, { isStatic: true, label: 'cannon' });
     Matter.World.add(this.world, this.body);
@@ -78,6 +85,31 @@ export class Cannon extends GameObject {
     this.resetCannon();
   }
 
+  private drawDragArea(): void {
+    this.dragArea.clear();
+    this.dragArea.fillStyle = { color: 0x000000, alpha: 0.2 };
+    this.dragArea.strokeStyle = { color: 0xffffff, alpha: 0.3, width: 1 };
+    this.dragArea.stroke();
+    const startAngle = Math.PI - window.conf.barrelLimitAngle.max / 180 * Math.PI;
+    const endAngle = Math.PI - window.conf.barrelLimitAngle.min / 180 * Math.PI;
+    const innerRadius = window.conf.dragDistance.min;
+    const outerRadius = window.conf.dragDistance.max;
+    const cx = 0;
+    const cy = 0;
+    this.dragArea.moveTo(
+      cx + outerRadius * Math.cos(startAngle),
+      cy + outerRadius * Math.sin(startAngle)
+    );
+    this.dragArea.arc(cx, cy, outerRadius, startAngle, endAngle, false);
+    this.dragArea.lineTo(
+      cx + innerRadius * Math.cos(endAngle),
+      cy + innerRadius * Math.sin(endAngle)
+    );
+    this.dragArea.arc(cx, cy, innerRadius, endAngle, startAngle, true);
+    this.dragArea.closePath();
+    this.dragArea.fill();
+  }
+
   private screenToWorld(screenX: number, screenY: number): Vector {
     const scale = this.container.scale.x;
     const worldX = (screenX - this.container.x) / scale;
@@ -86,6 +118,7 @@ export class Cannon extends GameObject {
   };
 
   private calculateDiff(pos: Vector): Vector {
+    // console.log("cursor pos:", pos);
     const dx = this.view.x + this.barrel.x - pos.x;
     const dy = this.view.y + this.barrel.y - pos.y;
     return { x: dx, y: dy }
@@ -104,6 +137,7 @@ export class Cannon extends GameObject {
       this.barrel.angle = -window.conf.barrelDefaultAngle;
     this.power = 0;
     this.isAimed = false;
+    this.dragArea.visible = false;
     this.aimParabola.hide();
     this.powerIndicator.setVisible(false);
   }
@@ -147,9 +181,9 @@ export class Cannon extends GameObject {
   private updatePower(diff: Vector): void {
     const distance = Math.hypot(diff.x, diff.y);
     const mind = window.conf.dragDistance.min
-    const maxd = window.conf.maxLaunchForceDistance
+    const maxd = window.conf.maxLaunchPowerDistance
     const a = (distance - mind) / (maxd - mind) // lerp
-    this.power = Math.min(a, 1) * window.conf.maxLaunchForce;
+    this.power = Math.min(a, 1) * window.conf.maxLaunchPower;
   }
 
   private updateAngle(diff: Vector): void {
@@ -171,12 +205,12 @@ export class Cannon extends GameObject {
     const tipX = cannonPos.x + Math.cos(angle) * width;
     const tipY = cannonPos.y + Math.sin(angle) * width;
 
-    const forceMagnitude = this.power;
-    const forceX = Math.cos(this.barrel.rotation) * forceMagnitude;
-    const forceY = Math.sin(this.barrel.rotation) * forceMagnitude;
+    const velMagnitude = this.power;
+    const velX = Math.cos(this.barrel.rotation) * velMagnitude;
+    const velY = Math.sin(this.barrel.rotation) * velMagnitude;
 
     this.currentProjectile = new Projectile(this.app, this.container, this.world, tipX, tipY);
-    this.currentProjectile.fire({ x: forceX, y: forceY });
+    this.currentProjectile.fire({ x: velX, y: velY });
     this.isFiring = true;
     this.curShots += 1;
     this.resetCannon(false);
@@ -203,6 +237,14 @@ export class Cannon extends GameObject {
         this.onAmmoSpent();
       }
     }
-    if (this.isAimed) this.updateAim();
+    if (this.isAimed) {
+      this.updateAim();
+      this.dragArea.visible = true;
+    }
+  }
+
+  public stopGaming(): void {
+    this.isFiring = false;
+    this.curShots = window.conf.ammoAmount;
   }
 }

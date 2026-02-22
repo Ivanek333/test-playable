@@ -18,6 +18,7 @@ export class AimParabola {
       const dot = new Pixi.Sprite(texture);
       dot.anchor.set(0.5);
       dot.visible = false;
+      dot.eventMode = 'none';
       this.dots.push(dot);
       this.container.addChild(dot);
     }
@@ -30,10 +31,11 @@ export class AimParabola {
   }
 
   public update(startX: number, startY: number, angle: number, power: number): void {
-    const projDensity = window.conf.projectileDensity;
+    /*const projDensity = window.conf.projectileDensity;
     const area = Math.PI * window.conf.textures.projectile.w * window.conf.textures.projectile.h / 4;
     const mass = area * projDensity;
-    const speed = power * 215 / mass; // 215 for some reason
+    const speed = power * 215 / mass; // 215 for some reason*/
+    const speed = power*2;
     const vx = Math.cos(angle) * speed;
     const vy = Math.sin(angle) * speed;
 

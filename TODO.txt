@@ -7,13 +7,10 @@
 ✓ Tutorial
 ✓ Draw arts for target
 ✓ Place target
-- Make winning screen
-- Make losing screen
-- Draw arts for background
-- Place background
-- Distance the castle and the cannon
-- Drag area
+✓ Make winning & losing screen
+✓ Distance the castle and the cannon
+✓ Drag area
 - Ammo left bar
 - Sounds
-- Better drag area 
+- Draw & place arts for background
 - Additional effects (fuse, recoil, breaking)

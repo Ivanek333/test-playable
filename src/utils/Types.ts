@@ -8,9 +8,10 @@ declare global {
   interface Window {
     conf: {
       designResolution: { w: number, h: number }
+      groundHeight: number;
       dragDistance: MinMax;
-      maxLaunchForce: number;
-      maxLaunchForceDistance: number;
+      maxLaunchPower: number;
+      maxLaunchPowerDistance: number;
       projectileDensity: number;
       barrelDefaultAngle: number;
       barrelLimitAngle: MinMax;

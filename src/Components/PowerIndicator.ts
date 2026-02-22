@@ -7,12 +7,11 @@ export class PowerIndicator {
   private maxPower: number;
 
   constructor(parent: Pixi.Container) {
-    const posCannon = window.conf.positions.cannon;
     const posLoc = window.conf.positions.powerIndicatorLocal;
-    const x = posCannon.x + posLoc.x;
-    const y = posCannon.y + posLoc.y;
+    const x = window.conf.positions.cannon.x + posLoc.x;
+    const y = window.conf.positions.cannon.y + posLoc.y;
     const size = window.conf.positions.powerIndicatorSize;
-    this.maxPower = window.conf.maxLaunchForce;
+    this.maxPower = window.conf.maxLaunchPower;
     this.container = new Pixi.Container();
     this.container.position.set(x, y);
     this.container.zIndex += 20;
@@ -25,7 +24,7 @@ export class PowerIndicator {
 
     this.fillBar = new Pixi.Graphics();
     this.container.addChild(this.fillBar);
-
+    this.container.eventMode = 'none';
     this.setVisible(false);
   }
 
@@ -53,5 +52,10 @@ export class PowerIndicator {
 
     this.fillBar.roundRect(0, 0, width, this.background.height, this.background.height / 2)
       .fill(gradient);
+  }
+
+  public resize(): void {
+    const posLoc = window.conf.positions.powerIndicatorLocal;
+    this.container.position.set(window.conf.positions.cannon.x + posLoc.x, window.conf.positions.cannon.y + posLoc.y);
   }
 }
