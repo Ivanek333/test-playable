@@ -1,10 +1,14 @@
 {
   "designResolution": { "w": 1000, "h": 600},
   "dragDistance": { "min": 20, "max": 150 },
-  "maxLaunchForce": 10,
+  "maxLaunchForce": 2,
   "maxLaunchForceDistance": 150,
+  "projectileDensity": 0.005,
   "barrelDefaultAngle": 30,
-  "barrelLimitAngle": { "min": -20, "max": 80},
+  "barrelLimitAngle": { "min": -20, "max": 80 },
+  "blockDamageThreshold": 3,
+  "blockDestructionThreshold": 10,
+  "immunityTime": 1000,
   "textures": {
     "projectile": { "path": "ball.png", "w": 50, "h": 50, "comment": "134 138" },
     "cannon": { "path": "base.png", "w": 244, "h": 83, "comment": "678 231" },
@@ -18,7 +22,9 @@
     "cannon": { "x": 50, "y": 530 },
     "barrelLocal": { "x": 59, "y": -34 },
     "barrelPivot": { "x": 55, "y": 53 },
-    "castle": { "x": 700, "y": 570 }
+    "castle": { "x": 400, "y": 570 },
+    "powerIndicatorLocal": { "x": 35, "y": -60 },
+    "powerIndicatorSize": { "x": 50, "y": 10 }
   },
   "blocks": [
     { "t": 0, "x": 30, "y": 40, "r": 90, "d": 0 },
@@ -59,6 +65,6 @@
 	
     { "t": 1, "x": 440, "y": 110, "r": 0, "d": 0 },
     { "t": 1, "x": 440, "y": 210, "r": 0, "d": 0 },
-    { "t": 1, "x": 440, "y": 310, "r": 0, "d": 0 },
+    { "t": 1, "x": 440, "y": 410, "r": 0, "d": 0 }
   ]
 }

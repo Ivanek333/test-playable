@@ -1,10 +1,12 @@
 import Matter from 'matter-js';
 import * as Pixi from 'pixi.js';
+import { Block } from './Block';
 
 export abstract class GameObject {
   public view: Pixi.Container;
   public body?: Matter.Body;
   protected world: Matter.World;
+  public onDestroy: (block: GameObject) => void = (block: GameObject) => {};
 
   constructor(protected app: Pixi.Application, protected container: Pixi.Container, world: Matter.World) {
     this.view = new Pixi.Container();
@@ -24,5 +26,6 @@ export abstract class GameObject {
       Matter.World.remove(this.world, this.body);
     }
     this.view.destroy({ children: true });
+    this.onDestroy(this);
   }
 }

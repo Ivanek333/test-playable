@@ -11,8 +11,12 @@ declare global {
       dragDistance: MinMax;
       maxLaunchForce: number;
       maxLaunchForceDistance: number;
+      projectileDensity: number;
       barrelDefaultAngle: number;
       barrelLimitAngle: MinMax;
+      blockDamageThreshold: number;
+      blockDestructionThreshold: number;
+      immunityTime: number;
       textures: {
         projectile: ConfigTexture;
         cannon: ConfigTexture;
@@ -26,7 +30,9 @@ declare global {
         cannon: Vector;
         barrelLocal: Vector;
         barrelPivot: Vector;
-        castle: Vector
+        castle: Vector;
+        powerIndicatorLocal: Vector;
+        powerIndicatorSize: Vector;
       }
       blocks: Array<BlockData>
     };

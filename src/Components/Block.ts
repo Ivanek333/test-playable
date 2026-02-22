@@ -9,6 +9,7 @@ export class Block extends GameObject {
   private damage: number;
   private textures: Array<ConfigTexture>;
   private sprite: Pixi.Sprite;
+  private creationTime: number;
 
   constructor(app: Pixi.Application, container: Pixi.Container, world: Matter.World, type: number, x: number, y: number, r: number, damage: number) {
     super(app, container, world);
@@ -32,17 +33,19 @@ export class Block extends GameObject {
     this.updateTexture();
 
     this.body = Matter.Bodies.rectangle(x, y, this.textures[0].w, this.textures[0].h, {
-      restitution: 0.8,
+      restitution: 0.2,
       friction: 0.5,
-      density: 0.001,
+      density: 0.002,
       label: 'block'
     });
     Matter.Body.setAngle(this.body, r / 180 * Math.PI);
     Matter.World.add(this.world, this.body);
+    this.creationTime = app.ticker.lastTime;
   }
 
   public dealDamage(value: number): void {
-    this.damage = Math.min(this.textures.length, this.damage + value);
+    if (this.app.ticker.lastTime - this.creationTime < window.conf.immunityTime) return;
+    this.damage += value;
     if (this.damage >= this.textures.length) {
       this.destroy();
     } else {

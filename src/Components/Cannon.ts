@@ -3,17 +3,25 @@ import * as Pixi from 'pixi.js';
 import { GameObject } from './GameObject';
 import { Projectile } from './Projectile';
 import { createFallbackTexture, getTextureFromConfigPath } from '../utils/AssetManager';
+import { AimParabola } from './AimParabola';
+import { PowerIndicator } from './PowerIndicator';
 
 export class Cannon extends GameObject {
   private barrel: Pixi.Container;
   private power: number = 0;
   private isDragging: boolean = false;
   private isAimed: boolean = false;
+  private isFiring: boolean = false;
   private onFire: (proj: Projectile) => void;
+  private currentProjectile: Projectile | undefined;
+  private aimParabola: AimParabola;
+  private powerIndicator: PowerIndicator;
 
-  constructor(app: Pixi.Application, container: Pixi.Container, world: Matter.World, onFireCallback: (proj: Projectile) => void) {
+  constructor(app: Pixi.Application, container: Pixi.Container, world: Matter.World, onFireCallback: (proj: Projectile) => void, aimParabola: AimParabola, powerIndicator: PowerIndicator) {
     super(app, container, world);
     this.onFire = onFireCallback;
+    this.aimParabola = aimParabola;
+    this.powerIndicator = powerIndicator;
 
     const cannon_pos = window.conf.positions.cannon;
     const cannonTextureConfig = window.conf.textures.cannon;
@@ -83,13 +91,17 @@ export class Cannon extends GameObject {
   }
 
 
-  private resetCannon(): void {
-    this.barrel.angle = -window.conf.barrelDefaultAngle;
+  private resetCannon(resetAngle: boolean = true): void {
+    if (resetAngle)
+      this.barrel.angle = -window.conf.barrelDefaultAngle;
     this.power = 0;
     this.isAimed = false;
+    this.aimParabola.hide();
+    this.powerIndicator.setVisible(false);
   }
 
   private onPointerDown(e: PointerEvent): void {
+    if (this.isFiring) return;
     const pos = this.screenToWorld(e.offsetX, e.offsetY);
     const diff = this.calculateDiff(pos);
     if (this.checkDragBorderMax(diff)) {
@@ -99,7 +111,7 @@ export class Cannon extends GameObject {
   }
 
   private onPointerMove(e: PointerEvent): void {
-    if (!this.isDragging) return;
+    if (this.isFiring || !this.isDragging) return;
     const pos = this.screenToWorld(e.offsetX, e.offsetY);
     const diff = this.calculateDiff(pos);
     if (!this.checkDragBorderMin(diff)) return this.resetCannon(); // reset without losing drag
@@ -110,7 +122,7 @@ export class Cannon extends GameObject {
   }
 
   private onPointerUp(e: PointerEvent): void {
-    if (!this.isDragging) return;
+    if (this.isFiring || !this.isDragging) return;
     this.isDragging = false;
     const pos = this.screenToWorld(e.offsetX, e.offsetY);
     const diff = this.calculateDiff(pos);
@@ -119,12 +131,7 @@ export class Cannon extends GameObject {
     this.isAimed = true;
     this.updatePower(diff);
     this.updateAngle(diff);
-
-    const forceMagnitude = this.power * 0.1;
-    const forceX = Math.cos(this.barrel.rotation) * forceMagnitude;
-    const forceY = Math.sin(this.barrel.rotation) * forceMagnitude;
-
-    this.fireProjectile({x: forceX, y: forceY});
+    this.fireProjectile();
     this.power = 0;
   }
 
@@ -148,20 +155,41 @@ export class Cannon extends GameObject {
     this.barrel.rotation = angle + mid;
   }
 
-  private fireProjectile(force: Vector): void {
+  private fireProjectile(): void {
     const cannonPos = { x: this.view.x + this.barrel.x, y: this.view.y + this.barrel.y };
     const angle = this.barrel.rotation;
     const width = this.barrel.getChildAt<Pixi.Sprite>(0).width - this.barrel.pivot.x;
     const tipX = cannonPos.x + Math.cos(angle) * width;
     const tipY = cannonPos.y + Math.sin(angle) * width;
 
-    let projectile = new Projectile(this.app, this.container, this.world, tipX, tipY);
-    projectile.fire(force);
-    this.onFire(projectile);
+    const forceMagnitude = this.power;
+    const forceX = Math.cos(this.barrel.rotation) * forceMagnitude;
+    const forceY = Math.sin(this.barrel.rotation) * forceMagnitude;
+
+    this.currentProjectile = new Projectile(this.app, this.container, this.world, tipX, tipY);
+    this.currentProjectile.fire({ x: forceX, y: forceY });
+    this.isFiring = true;
+    this.resetCannon(false);
+    this.onFire(this.currentProjectile);
+  }
+
+  private updateAim(): void {
+    const cannonPos = { x: this.view.x + this.barrel.x, y: this.view.y + this.barrel.y };
+    const angle = this.barrel.rotation;
+    const width = this.barrel.getChildAt<Pixi.Sprite>(0).width - this.barrel.pivot.x;
+    const tipX = cannonPos.x + Math.cos(angle) * width;
+    const tipY = cannonPos.y + Math.sin(angle) * width;
+
+    this.aimParabola.update(tipX, tipY, angle, this.power);
+    this.powerIndicator.setVisible(true);
+    this.powerIndicator.updatePower(this.power);
   }
 
   public update(deltaTime: number): void {
     super.update(deltaTime);
-    
+    if (this.isFiring && this.currentProjectile?.isAtRest()) {
+      this.isFiring = false;
+    }
+    if (this.isAimed) this.updateAim();
   }
 }

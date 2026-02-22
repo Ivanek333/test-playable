@@ -5,6 +5,8 @@ import { GameObject } from './GameObject';
 import { Cannon } from './Cannon';
 import { Projectile } from './Projectile';
 import { Block } from './Block';
+import { AimParabola } from './AimParabola';
+import { PowerIndicator } from './PowerIndicator';
 
 export class GameManager {
   private app: Pixi.Application;
@@ -16,7 +18,13 @@ export class GameManager {
   private gameObjects: Set<GameObject> = new Set();
   private cannon!: Cannon;
   private projectile: Projectile | null = null;
-  private castleBlocks: Block[] = [];
+  private blockMap: Map<number, Block> = new Map(); 
+  private castleBlocks: Set<Block> = new Set();
+  private accumulator: number = 0;
+  private fixedTimeStep = 16.667;
+  private maxStepsPerFrame = 5;
+  private aimParabola: AimParabola;
+  private powerIndicator: PowerIndicator;
 
   constructor(app: Pixi.Application, container: Pixi.Container, designWidht: number, designHeight: number) {
     this.app = app;
@@ -26,14 +34,18 @@ export class GameManager {
 
     this.engine = Matter.Engine.create({
       gravity: { x: 0, y: 1 },
-      enableSleeping: true
+      enableSleeping: false
     });
     this.world = this.engine.world;
+    // Matter.Engine.update(this.engine, 1000/60, 10);
 
     this.createBoundaries();
     this.createCastle();
+    this.aimParabola = new AimParabola(this.app, this.container, this.engine.gravity.y);
+    this.powerIndicator = new PowerIndicator(this.container);
     this.createCannon();
 
+    Matter.Events.on(this.engine, 'collisionStart', this.onCollisionStart.bind(this));
     this.app.ticker.add(this.update.bind(this));
   }
 
@@ -75,13 +87,12 @@ export class GameManager {
     const start = window.conf.positions.castle;
     window.conf.blocks.forEach(data => {
       const block = new Block(this.app, this.container, this.world, data.t, data.x + start.x, -data.y + start.y, data.r, data.d);
-      this.castleBlocks.push(block);
-      this.gameObjects.add(block);
+      this.registerBlock(block);
     });
   }
 
   private createCannon(): void {
-    this.cannon = new Cannon(this.app, this.container, this.world, this.onProjectileFire.bind(this));
+    this.cannon = new Cannon(this.app, this.container, this.world, this.onProjectileFire.bind(this), this.aimParabola, this.powerIndicator);
     this.gameObjects.add(this.cannon);
   }
 
@@ -95,18 +106,76 @@ export class GameManager {
     this.gameObjects.add(proj);
   }
 
+  public registerBlock(block: Block): void {
+  if (block.body) {
+    this.blockMap.set(block.body.id, block);
+  }
+  this.castleBlocks.add(block);
+  this.gameObjects.add(block);
+  block.onDestroy = this.removeBlock.bind(this);
+}
+
+public removeBlock(blockObject: GameObject): void {
+  let block = blockObject as Block;
+  if (block.body) {
+    this.blockMap.delete(block.body.id);
+  }
+  this.castleBlocks.delete(block);
+  this.gameObjects.delete(block);
+}
+
   private update(ticker: Pixi.Ticker): void {
-    Matter.Engine.update(this.engine, ticker.deltaTime * 16.667);
+    /* const deltaTime = ticker.elapsedMS
+    this.accumulator += deltaTime;
 
+    let steps = 0;
+    while (this.accumulator >= this.fixedTimeStep && steps < this.maxStepsPerFrame) {
+      Matter.Engine.update(this.engine, this.fixedTimeStep);
+      this.accumulator -= this.fixedTimeStep;
+      steps++;
+    } */
+    const deltaTime = ticker.deltaTime;
+    Matter.Engine.update(this.engine, Math.min(deltaTime, 1.1) * this.fixedTimeStep);
     TWEEN.update();
-
     this.gameObjects.forEach(obj => obj.update(ticker.deltaTime));
+    //console.log(ticker.deltaTime, ticker.FPS);
+  }
+
+  private onCollisionStart(event: Matter.IEventCollision<Matter.Engine>): void {
+    const pairs = event.pairs;
+    const config = window.conf;
+    const thresh1 = config.blockDamageThreshold;
+    const thresh2 = config.blockDestructionThreshold;
+
+    for (const pair of pairs) {
+      const { bodyA, bodyB } = pair;
+      const blockA = this.blockMap.get(bodyA.id);
+      const blockB = this.blockMap.get(bodyB.id);
+      if (!blockA && !blockB) continue;
+
+      // Impact speed along collision normal
+      const normal = pair.collision.normal;
+      const relVel = Matter.Vector.sub(bodyA.velocity, bodyB.velocity);
+      let impactSpeed = Matter.Vector.dot(relVel, normal);
+      impactSpeed = Math.abs(impactSpeed);
+      //if (impactSpeed <= 0) continue;      // moving apart
+
+      let damage = 0;
+      if (impactSpeed >= thresh2) damage = 2;
+      else if (impactSpeed >= thresh1) damage = 1;
+
+      if (damage > 0) {
+        if (blockA) blockA.dealDamage(damage);
+        if (blockB) blockB.dealDamage(damage);
+      }
+    }
   }
 
   public reset(): void {
     this.gameObjects.forEach(obj => obj.destroy());
     this.gameObjects.clear();
-    this.castleBlocks = [];
+    this.castleBlocks.forEach(obj => obj.destroy());
+    this.castleBlocks.clear();
     this.projectile = null;
 
     this.createCastle();

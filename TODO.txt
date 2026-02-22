@@ -1,14 +1,15 @@
 ✓ Build the castle
-- Add block damage and destruction
-- Block input after firing
-- Draw arts for background and target
-- Place background
-- Place target
+✓ Add block damage and destruction
+✓ Block input after firing
+✓ Aiming parabola
+✓ Power indicator
+- ! Tutorial
 - Make winning screen
 - Make losing screen
-- ! Aiming parabola
-- ! Power indicator
-- ! Tutorial
+- Draw arts for target
+- Place target
+- Draw arts for background
+- Place background
 - Distance the castle and the cannon
 - Drag area
 - Ammo left bar

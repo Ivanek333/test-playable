@@ -20,9 +20,10 @@ export class Projectile extends GameObject {
     this.view.position.set(x, y);
 
     this.body = Matter.Bodies.circle(x, y, radius, {
-      restitution: 0.5,
+      restitution: 0.1,
       friction: 0.1,
-      density: 0.002,
+      density: window.conf.projectileDensity,
+      frictionAir: 0,
       label: 'projectile'
     });
 
@@ -33,5 +34,12 @@ export class Projectile extends GameObject {
     if (this.body) {
       Matter.Body.applyForce(this.body, this.body.position, force);
     }
+  }
+
+  public isAtRest(): boolean {
+    if (!this.body) return true;
+    const speedSq = this.body.velocity.x ** 2 + this.body.velocity.y ** 2;
+    const angularSpeed = Math.abs(this.body.angularVelocity);
+    return speedSq < 0.01 && angularSpeed < 0.01;
   }
 }
