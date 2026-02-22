@@ -5,23 +5,36 @@ import { Projectile } from './Projectile';
 import { createFallbackTexture, getTextureFromConfigPath } from '../utils/AssetManager';
 import { AimParabola } from './AimParabola';
 import { PowerIndicator } from './PowerIndicator';
+import { Tutorial } from './Tutorial';
 
 export class Cannon extends GameObject {
   private barrel: Pixi.Container;
   private power: number = 0;
+  private curShots: number = 0;
   private isDragging: boolean = false;
   private isAimed: boolean = false;
   private isFiring: boolean = false;
   private onFire: (proj: Projectile) => void;
+  private onAmmoSpent: () => void;
   private currentProjectile: Projectile | undefined;
   private aimParabola: AimParabola;
   private powerIndicator: PowerIndicator;
+  private tutorial: Tutorial;
 
-  constructor(app: Pixi.Application, container: Pixi.Container, world: Matter.World, onFireCallback: (proj: Projectile) => void, aimParabola: AimParabola, powerIndicator: PowerIndicator) {
+  constructor(app: Pixi.Application, 
+        container: Pixi.Container,
+        world: Matter.World, 
+        onFireCallback: (proj: Projectile) => void, 
+        onAmmoSpentCallback: () => void,
+        aimParabola: AimParabola, 
+        powerIndicator: PowerIndicator,
+        tutorial: Tutorial) {
     super(app, container, world);
     this.onFire = onFireCallback;
+    this.onAmmoSpent = onAmmoSpentCallback;
     this.aimParabola = aimParabola;
     this.powerIndicator = powerIndicator;
+    this.tutorial = tutorial;
 
     const cannon_pos = window.conf.positions.cannon;
     const cannonTextureConfig = window.conf.textures.cannon;
@@ -35,9 +48,6 @@ export class Cannon extends GameObject {
 
     this.view.addChild(cannonSprite);
     this.view.position.set(cannon_pos.x, cannon_pos.y);
-    //this.sprite.addChild(new Pixi.Graphics().circle(cannonSprite.pivot.x, cannonSprite.pivot.y, 3).fill({color: 0xff0000}));
-
-
 
 
     const barrel_pos = window.conf.positions.barrelLocal;
@@ -53,7 +63,6 @@ export class Cannon extends GameObject {
     this.barrel = new Pixi.Container();
     this.barrel.addChild(barrelSprite);
     this.barrel.pivot.set(barrel_pivot.x, barrel_pivot.y);
-    //this.barrel.addChild(new Pixi.Graphics().circle(this.barrel.pivot.x, this.barrel.pivot.y, 3).fill({color: 0xff0000}));
     this.barrel.position.set(barrel_pos.x, barrel_pos.y);
     this.barrel.zIndex -= 1
     this.view.addChild(this.barrel);
@@ -76,8 +85,7 @@ export class Cannon extends GameObject {
     return { x: worldX, y: worldY };
   };
 
-  private calculateDiff(pos: Vector): Vector {    
-    //pos = this.app.renderer.events.pointer.global;
+  private calculateDiff(pos: Vector): Vector {
     const dx = this.view.x + this.barrel.x - pos.x;
     const dy = this.view.y + this.barrel.y - pos.y;
     return { x: dx, y: dy }
@@ -101,17 +109,18 @@ export class Cannon extends GameObject {
   }
 
   private onPointerDown(e: PointerEvent): void {
-    if (this.isFiring) return;
+    if (this.isFiring || this.curShots >= window.conf.ammoAmount) return;
     const pos = this.screenToWorld(e.offsetX, e.offsetY);
     const diff = this.calculateDiff(pos);
     if (this.checkDragBorderMax(diff)) {
       this.isDragging = true;
       this.isAimed = true;
     }
+    this.tutorial.stopTutorial();
   }
 
   private onPointerMove(e: PointerEvent): void {
-    if (this.isFiring || !this.isDragging) return;
+    if (this.isFiring || !this.isDragging || this.curShots >= window.conf.ammoAmount) return;
     const pos = this.screenToWorld(e.offsetX, e.offsetY);
     const diff = this.calculateDiff(pos);
     if (!this.checkDragBorderMin(diff)) return this.resetCannon(); // reset without losing drag
@@ -122,7 +131,7 @@ export class Cannon extends GameObject {
   }
 
   private onPointerUp(e: PointerEvent): void {
-    if (this.isFiring || !this.isDragging) return;
+    if (this.isFiring || !this.isDragging || this.curShots >= window.conf.ammoAmount) return;
     this.isDragging = false;
     const pos = this.screenToWorld(e.offsetX, e.offsetY);
     const diff = this.calculateDiff(pos);
@@ -169,6 +178,7 @@ export class Cannon extends GameObject {
     this.currentProjectile = new Projectile(this.app, this.container, this.world, tipX, tipY);
     this.currentProjectile.fire({ x: forceX, y: forceY });
     this.isFiring = true;
+    this.curShots += 1;
     this.resetCannon(false);
     this.onFire(this.currentProjectile);
   }
@@ -189,6 +199,9 @@ export class Cannon extends GameObject {
     super.update(deltaTime);
     if (this.isFiring && this.currentProjectile?.isAtRest()) {
       this.isFiring = false;
+      if (this.curShots >= window.conf.ammoAmount) {
+        this.onAmmoSpent();
+      }
     }
     if (this.isAimed) this.updateAim();
   }

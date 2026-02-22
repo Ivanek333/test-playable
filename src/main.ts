@@ -1,6 +1,4 @@
 import * as Pixi from 'pixi.js';
-import Matter from 'matter-js';
-import * as TWEEN from '@tweenjs/tween.js';
 import { GameManager } from './Components/GameManager';
 import { OrientationManager } from './utils/OrientationHandler';
 import { loadAllTextures } from './utils/AssetManager';

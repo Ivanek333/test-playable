@@ -1,6 +1,5 @@
 import Matter from 'matter-js';
 import * as Pixi from 'pixi.js';
-import { Block } from './Block';
 
 export abstract class GameObject {
   public view: Pixi.Container;

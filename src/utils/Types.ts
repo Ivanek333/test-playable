@@ -14,6 +14,7 @@ declare global {
       projectileDensity: number;
       barrelDefaultAngle: number;
       barrelLimitAngle: MinMax;
+      ammoAmount: number;
       blockDamageThreshold: number;
       blockDestructionThreshold: number;
       immunityTime: number;
@@ -21,6 +22,8 @@ declare global {
         projectile: ConfigTexture;
         cannon: ConfigTexture;
         barrel: ConfigTexture;
+        hand: ConfigTexture;
+        target: ConfigTexture;
         block_short_damage0: ConfigTexture;
         block_short_damage1: ConfigTexture;
         block_long_damage0: ConfigTexture;
@@ -30,9 +33,12 @@ declare global {
         cannon: Vector;
         barrelLocal: Vector;
         barrelPivot: Vector;
-        castle: Vector;
         powerIndicatorLocal: Vector;
         powerIndicatorSize: Vector;
+        tutorialLocalStart: Vector;
+        tutorialLocalEnd: Vector;
+        castle: Vector;
+        targetLocal: Vector
       }
       blocks: Array<BlockData>
     };

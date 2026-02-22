@@ -1,13 +1,14 @@
+✓ Draw the rest of the owl
 ✓ Build the castle
 ✓ Add block damage and destruction
 ✓ Block input after firing
 ✓ Aiming parabola
 ✓ Power indicator
-- ! Tutorial
+✓ Tutorial
+✓ Draw arts for target
+✓ Place target
 - Make winning screen
 - Make losing screen
-- Draw arts for target
-- Place target
 - Draw arts for background
 - Place background
 - Distance the castle and the cannon

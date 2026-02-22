@@ -1,12 +1,14 @@
 import Matter from 'matter-js';
 import * as Pixi from 'pixi.js';
-import * as TWEEN from '@tweenjs/tween.js';
 import { GameObject } from './GameObject';
 import { Cannon } from './Cannon';
 import { Projectile } from './Projectile';
 import { Block } from './Block';
 import { AimParabola } from './AimParabola';
 import { PowerIndicator } from './PowerIndicator';
+import { Tutorial } from './Tutorial';
+import { TweenManager } from '../utils/Tween';
+import { Target } from './Target';
 
 export class GameManager {
   private app: Pixi.Application;
@@ -15,23 +17,23 @@ export class GameManager {
   private designHeight: number;
   private engine: Matter.Engine;
   private world: Matter.World;
+  private tweenManager: TweenManager;
   private gameObjects: Set<GameObject> = new Set();
   private cannon!: Cannon;
-  private projectile: Projectile | null = null;
   private blockMap: Map<number, Block> = new Map(); 
   private castleBlocks: Set<Block> = new Set();
-  private accumulator: number = 0;
   private fixedTimeStep = 16.667;
-  private maxStepsPerFrame = 5;
   private aimParabola: AimParabola;
   private powerIndicator: PowerIndicator;
+  private tutorial: Tutorial;
+  private target: Target;
 
   constructor(app: Pixi.Application, container: Pixi.Container, designWidht: number, designHeight: number) {
     this.app = app;
     this.container = container;
     this.designWidth = designWidht;
     this.designHeight = designHeight;
-
+    this.tweenManager = new TweenManager();
     this.engine = Matter.Engine.create({
       gravity: { x: 0, y: 1 },
       enableSleeping: false
@@ -41,12 +43,16 @@ export class GameManager {
 
     this.createBoundaries();
     this.createCastle();
+    this.target = new Target(this.app, this.container, this.world);
+    this.gameObjects.add(this.target);
     this.aimParabola = new AimParabola(this.app, this.container, this.engine.gravity.y);
     this.powerIndicator = new PowerIndicator(this.container);
+    this.tutorial = new Tutorial(this.app, this.container, this.tweenManager);
     this.createCannon();
 
     Matter.Events.on(this.engine, 'collisionStart', this.onCollisionStart.bind(this));
     this.app.ticker.add(this.update.bind(this));
+    this.tutorial.startTutorial();
   }
 
   private createBoundaries(): void {
@@ -92,7 +98,15 @@ export class GameManager {
   }
 
   private createCannon(): void {
-    this.cannon = new Cannon(this.app, this.container, this.world, this.onProjectileFire.bind(this), this.aimParabola, this.powerIndicator);
+    this.cannon = new Cannon(
+      this.app, 
+      this.container, 
+      this.world, 
+      this.onProjectileFire.bind(this),
+      this.onAmmoSpent.bind(this), 
+      this.aimParabola, 
+      this.powerIndicator,
+      this.tutorial);
     this.gameObjects.add(this.cannon);
   }
 
@@ -101,8 +115,6 @@ export class GameManager {
       this.projectile.destroy();
       this.gameObjects.delete(this.projectile);
     }*/
-
-    this.projectile = proj;
     this.gameObjects.add(proj);
   }
 
@@ -125,20 +137,10 @@ public removeBlock(blockObject: GameObject): void {
 }
 
   private update(ticker: Pixi.Ticker): void {
-    /* const deltaTime = ticker.elapsedMS
-    this.accumulator += deltaTime;
-
-    let steps = 0;
-    while (this.accumulator >= this.fixedTimeStep && steps < this.maxStepsPerFrame) {
-      Matter.Engine.update(this.engine, this.fixedTimeStep);
-      this.accumulator -= this.fixedTimeStep;
-      steps++;
-    } */
     const deltaTime = ticker.deltaTime;
     Matter.Engine.update(this.engine, Math.min(deltaTime, 1.1) * this.fixedTimeStep);
-    TWEEN.update();
+    this.tweenManager.update();
     this.gameObjects.forEach(obj => obj.update(ticker.deltaTime));
-    //console.log(ticker.deltaTime, ticker.FPS);
   }
 
   private onCollisionStart(event: Matter.IEventCollision<Matter.Engine>): void {
@@ -151,14 +153,18 @@ public removeBlock(blockObject: GameObject): void {
       const { bodyA, bodyB } = pair;
       const blockA = this.blockMap.get(bodyA.id);
       const blockB = this.blockMap.get(bodyB.id);
+      if ([bodyA, bodyB].some(b => b.label == 'target') && 
+          [bodyA, bodyB].some(b => b.label == 'projectile')) {
+        this.onTargetHit();
+        continue;
+      }
       if (!blockA && !blockB) continue;
 
-      // Impact speed along collision normal
+      // impact speed along collision normal
       const normal = pair.collision.normal;
       const relVel = Matter.Vector.sub(bodyA.velocity, bodyB.velocity);
       let impactSpeed = Matter.Vector.dot(relVel, normal);
       impactSpeed = Math.abs(impactSpeed);
-      //if (impactSpeed <= 0) continue;      // moving apart
 
       let damage = 0;
       if (impactSpeed >= thresh2) damage = 2;
@@ -171,14 +177,28 @@ public removeBlock(blockObject: GameObject): void {
     }
   }
 
+  private onTargetHit(): void {
+    this.target.destroy();
+    this.gameObjects.delete(this.target);
+    // start async win
+    console.log("YOU WON")
+  }
+
+  private onAmmoSpent(): void {
+    // start async lose
+    console.log("YOU LOST")
+  }
+
   public reset(): void {
     this.gameObjects.forEach(obj => obj.destroy());
     this.gameObjects.clear();
     this.castleBlocks.forEach(obj => obj.destroy());
     this.castleBlocks.clear();
-    this.projectile = null;
 
+    this.createBoundaries();
     this.createCastle();
+    this.target = new Target(this.app, this.container, this.world);
+    this.gameObjects.add(this.target);
     this.createCannon();
   }
 

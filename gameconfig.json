@@ -6,6 +6,7 @@
   "projectileDensity": 0.005,
   "barrelDefaultAngle": 30,
   "barrelLimitAngle": { "min": -20, "max": 80 },
+  "ammoAmount": 3,
   "blockDamageThreshold": 3,
   "blockDestructionThreshold": 10,
   "immunityTime": 1000,
@@ -13,18 +14,23 @@
     "projectile": { "path": "ball.png", "w": 50, "h": 50, "comment": "134 138" },
     "cannon": { "path": "base.png", "w": 244, "h": 83, "comment": "678 231" },
     "barrel": { "path": "barrel.png", "w": 220, "h": 107, "comment": "613 297" },
+    "hand": { "path": "hand.png", "w": 47, "h": 44, "comment": "94 88" },
+    "target": { "path": "target.png", "w": 114, "h": 132, "comment": "228 264" },
     "block_short_damage0": { "path": "block_short0.png", "w": 80, "h": 20, "comment": "234 52" },
     "block_short_damage1": { "path": "block_short1.png", "w": 80, "h": 20 },
     "block_long_damage0": { "path": "block_long0.png", "w": 160, "h": 20, "comment": "430 52" },
     "block_long_damage1": { "path": "block_long1.png", "w": 160, "h": 20 }
   },
   "positions": {
-    "cannon": { "x": 50, "y": 530 },
+    "cannon": { "x": 50, "y": 530, "comment": "the following positions are relative to the cannon" },
     "barrelLocal": { "x": 59, "y": -34 },
     "barrelPivot": { "x": 55, "y": 53 },
-    "castle": { "x": 400, "y": 570 },
     "powerIndicatorLocal": { "x": 35, "y": -60 },
-    "powerIndicatorSize": { "x": 50, "y": 10 }
+    "powerIndicatorSize": { "x": 50, "y": 10 },
+    "tutorialLocalStart": { "x": 40, "y": -20 },
+    "tutorialLocalEnd": { "x": 10, "y": 40 },
+    "castle": { "x": 400, "y": 570, "comment": "the following positions are relative to the castle" },
+    "targetLocal": { "x": 440, "y": 286 }
   },
   "blocks": [
     { "t": 0, "x": 30, "y": 40, "r": 90, "d": 0 },

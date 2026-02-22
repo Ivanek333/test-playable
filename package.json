@@ -14,7 +14,6 @@
   "type": "commonjs",
   "sideEffects": false,
   "dependencies": {
-    "@tweenjs/tween.js": "^25.0.0",
     "matter-js": "^0.20.0",
     "pixi.js": "^8.16.0"
   },
