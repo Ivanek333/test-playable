@@ -25,17 +25,22 @@ declare global {
         barrel: ConfigTexture;
         hand: ConfigTexture;
         target: ConfigTexture;
+        background: ConfigTexture;
         block_short_damage0: ConfigTexture;
         block_short_damage1: ConfigTexture;
         block_long_damage0: ConfigTexture;
         block_long_damage1: ConfigTexture;
       };
+      backgroundY: number;
+      fogH: number;
       positions: {
         cannon: Vector;
         barrelLocal: Vector;
         barrelPivot: Vector;
         powerIndicatorLocal: Vector;
         powerIndicatorSize: Vector;
+        ammoBarLocal: Vector;
+        ammoBarSize: Vector;
         tutorialLocalStart: Vector;
         tutorialLocalEnd: Vector;
         castle: Vector;

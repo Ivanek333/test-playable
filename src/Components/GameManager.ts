@@ -4,12 +4,14 @@ import { GameObject } from './GameObject';
 import { Cannon } from './Cannon';
 import { Projectile } from './Projectile';
 import { Block } from './Block';
-import { AimParabola } from './AimParabola';
-import { PowerIndicator } from './PowerIndicator';
-import { Tutorial } from './Tutorial';
+import { AimParabola } from '../UI/AimParabola';
+import { PowerIndicator } from '../UI/PowerIndicator';
+import { Tutorial } from '../UI/Tutorial';
 import { TweenManager } from '../utils/Tween';
 import { Target } from './Target';
-import { GameOverlay } from './GameOverlay';
+import { GameOverlay } from '../UI/GameOverlay';
+import { AmmoBar } from '../UI/AmmoBar';
+import { TilingBackground } from '../UI/Background';
 
 export class GameManager {
   private app: Pixi.Application;
@@ -25,13 +27,15 @@ export class GameManager {
   private cannon!: Cannon;
   private blockMap: Map<number, Block> = new Map(); 
   private castleBlocks: Set<Block> = new Set();
+  private resizeBoundaries!: () => void;
   private fixedTimeStep = 16.667;
-  private lastUpdate: number;
   private aimParabola: AimParabola;
   private powerIndicator: PowerIndicator;
   private tutorial: Tutorial;
   private target: Target;
   private gameOverlay: GameOverlay;
+  private ammoBar: AmmoBar;
+  private background: TilingBackground;
 
   constructor(app: Pixi.Application, container: Pixi.Container, designWidht: number, designHeight: number) {
     this.app = app;
@@ -55,6 +59,9 @@ export class GameManager {
     window.conf.positions.cannon.x += this.leftWorld;
     window.conf.positions.castle.x += this.rightWorld;
 
+    this.background = new TilingBackground(this.app, this.container);
+    this.background.updateBounds(this.leftWorld, this.rightWorld);
+
     this.createBoundaries();
     this.createCastle();
     this.target = new Target(this.app, this.container, this.world);
@@ -62,18 +69,19 @@ export class GameManager {
     this.aimParabola = new AimParabola(this.app, this.container, this.engine.gravity.y);
     this.powerIndicator = new PowerIndicator(this.container);
     this.tutorial = new Tutorial(this.app, this.container, this.tweenManager);
+    this.ammoBar = new AmmoBar(this.container);
     this.createCannon();
 
     Matter.Events.on(this.engine, 'collisionStart', this.onCollisionStart.bind(this));
     this.app.ticker.add(this.update.bind(this));
     this.tutorial.startTutorial();
-    this.lastUpdate = performance.now();
   }
 
   private createBoundaries(): void {
     const groundHeight = window.conf.groundHeight;
     const groundY = this.designHeight - groundHeight;
-    const groundWidth = this.designWidth + 1000;
+    const groundWidth = this.rightWorld - this.leftWorld + 200;
+
     const ground = Matter.Bodies.rectangle(
       this.designWidth / 2,
       groundY + groundHeight / 2,
@@ -82,26 +90,42 @@ export class GameManager {
       { isStatic: true, restitution: 0.5, label: 'ground' }
     );
 
-    const groundSprite = new Pixi.Graphics().rect(-500, groundY, this.designWidth + 1000, groundHeight).fill(0x228B22);
-    this.container.addChild(groundSprite);
+    const ceiling = Matter.Bodies.rectangle(
+      this.designWidth / 2,
+      -2000,
+      groundWidth,
+      groundHeight,
+      { isStatic: true, restitution: 0.5, label: 'ground' }
+    );
+
+    const wallHeight = this.designHeight + 2000;
+    const wallOffset = (this.designHeight - 2000) / 2;
 
     const leftWall = Matter.Bodies.rectangle(
-      -500,
-      this.designHeight / 2,
+      this.leftWorld - 100,
+      wallOffset,
       20,
-      this.designHeight + 600,
+      wallHeight,
       { isStatic: true, label: 'wall' }
     );
 
     const rightWall = Matter.Bodies.rectangle(
-      this.designWidth + 500,
-      this.designHeight / 2,
+      this.rightWorld + 100,
+      wallOffset,
       20,
-      this.designHeight + 600,
+      wallHeight,
       { isStatic: true, label: 'wall' }
     );
 
     Matter.World.add(this.world, [ground, leftWall, rightWall]);
+
+    this.resizeBoundaries = () => {
+      const groundWidth = this.rightWorld - this.leftWorld + 200;
+      Matter.Body.scale(ground, groundWidth / ground.bounds.min.x, 1);
+      Matter.Body.scale(ceiling, groundWidth / ground.bounds.min.x, 1);
+      Matter.Body.setPosition(leftWall, { x: this.leftWorld - 100, y: wallOffset })
+      Matter.Body.setPosition(rightWall, { x: this.rightWorld + 100, y: wallOffset })
+    }
   }
 
   private createCastle(): void {
@@ -120,7 +144,8 @@ export class GameManager {
       this.onAmmoSpent.bind(this), 
       this.aimParabola, 
       this.powerIndicator,
-      this.tutorial);
+      this.tutorial,
+      this.ammoBar);
     this.gameObjects.add(this.cannon);
   }
 
@@ -236,12 +261,15 @@ public removeBlock(blockObject: GameObject): void {
     const rightDif = this.rightWorld - lastRight;
     window.conf.positions.cannon.x += leftDif;
     window.conf.positions.castle.x += rightDif;
+    this.resizeBoundaries();
     this.cannon.shift({x: leftDif, y: 0});
     this.powerIndicator.resize();
+    this.ammoBar.resize();
     this.tutorial.shift({x: leftDif, y: 0});
     this.target.shift({x: rightDif, y: 0});
     this.castleBlocks.forEach(block => {
       block.shift({x: rightDif, y: 0});
     });
+    this.background.updateBounds(this.leftWorld, this.rightWorld);
   }
 }

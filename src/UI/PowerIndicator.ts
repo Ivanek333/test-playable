@@ -14,7 +14,7 @@ export class PowerIndicator {
     this.maxPower = window.conf.maxLaunchPower;
     this.container = new Pixi.Container();
     this.container.position.set(x, y);
-    this.container.zIndex += 20;
+    this.container.zIndex = 20;
     parent.addChild(this.container);
 
     this.background = new Pixi.Graphics()

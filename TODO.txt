@@ -10,7 +10,5 @@
 ✓ Make winning & losing screen
 ✓ Distance the castle and the cannon
 ✓ Drag area
-- Ammo left bar
-- Sounds
-- Draw & place arts for background
-- Additional effects (fuse, recoil, breaking)
+✓ Ammo left bar
+✓ Draw & place arts for background

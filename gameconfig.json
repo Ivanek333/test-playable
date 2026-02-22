@@ -1,6 +1,6 @@
 {
-  "designResolution": { "w": 1200, "h": 600},
-  "groundHeight": 40,
+  "designResolution": { "w": 1200, "h": 800},
+  "groundHeight": 60,
   "dragDistance": { "min": 20, "max": 150 },
   "maxLaunchPower": 30,
   "maxLaunchPowerDistance": 150,
@@ -17,20 +17,25 @@
     "barrel": { "path": "barrel.png", "w": 220, "h": 107, "comment": "613 297" },
     "hand": { "path": "hand.png", "w": 47, "h": 44, "comment": "94 88" },
     "target": { "path": "target.png", "w": 114, "h": 132, "comment": "228 264" },
+    "background": { "path": "background.png", "w": 459, "h": 1622, "comment": "614 2170 -> h:1070 = 800" },
     "block_short_damage0": { "path": "block_short0.png", "w": 80, "h": 20, "comment": "234 52" },
     "block_short_damage1": { "path": "block_short1.png", "w": 80, "h": 20 },
     "block_long_damage0": { "path": "block_long0.png", "w": 160, "h": 20, "comment": "430 52" },
     "block_long_damage1": { "path": "block_long1.png", "w": 160, "h": 20 }
   },
+  "backgroundY": -300,
+  "fogH": 250,
   "positions": {
-    "cannon": { "x": 90, "y": 520, "comment": "the following positions are relative to the cannon" },
+    "cannon": { "x": 100, "y": 700, "comment": "the following positions are relative to the cannon" },
     "barrelLocal": { "x": 59, "y": -34 },
     "barrelPivot": { "x": 55, "y": 53 },
-    "powerIndicatorLocal": { "x": 35, "y": -60 },
+    "powerIndicatorLocal": { "x": 35, "y": -70 },
     "powerIndicatorSize": { "x": 50, "y": 10 },
+    "ammoBarLocal": { "x": 35, "y": -57 },
+    "ammoBarSize": { "x": 50, "y": 10 },
     "tutorialLocalStart": { "x": 60, "y": 0 },
     "tutorialLocalEnd": { "x": 0, "y": 40 },
-    "castle": { "x": -600, "y": 570, "comment": "the following positions are relative to the castle (and also y in up direction) (for blocks too)" },
+    "castle": { "x": -600, "y": 750, "comment": "the following positions are relative to the castle (and also y in up direction) (for blocks too)" },
     "targetLocal": { "x": 440, "y": 286 }
   },
   "blocks": [

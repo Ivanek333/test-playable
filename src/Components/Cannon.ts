@@ -3,9 +3,10 @@ import * as Pixi from 'pixi.js';
 import { GameObject } from './GameObject';
 import { Projectile } from './Projectile';
 import { createFallbackTexture, getTextureFromConfigPath } from '../utils/AssetManager';
-import { AimParabola } from './AimParabola';
-import { PowerIndicator } from './PowerIndicator';
-import { Tutorial } from './Tutorial';
+import { AimParabola } from '../UI/AimParabola';
+import { PowerIndicator } from '../UI/PowerIndicator';
+import { Tutorial } from '../UI/Tutorial';
+import { AmmoBar } from '../UI/AmmoBar';
 
 export class Cannon extends GameObject {
   private barrel: Pixi.Container;
@@ -21,6 +22,7 @@ export class Cannon extends GameObject {
   private aimParabola: AimParabola;
   private powerIndicator: PowerIndicator;
   private tutorial: Tutorial;
+  private ammoBar: AmmoBar;
 
   constructor(app: Pixi.Application, 
         container: Pixi.Container,
@@ -29,13 +31,17 @@ export class Cannon extends GameObject {
         onAmmoSpentCallback: () => void,
         aimParabola: AimParabola, 
         powerIndicator: PowerIndicator,
-        tutorial: Tutorial) {
+        tutorial: Tutorial,
+        ammoBar: AmmoBar
+      ) {
     super(app, container, world);
     this.onFire = onFireCallback;
     this.onAmmoSpent = onAmmoSpentCallback;
     this.aimParabola = aimParabola;
     this.powerIndicator = powerIndicator;
     this.tutorial = tutorial;
+    this.ammoBar = ammoBar;
+
 
     const cannon_pos = window.conf.positions.cannon;
     const cannonTextureConfig = window.conf.textures.cannon;
@@ -135,6 +141,7 @@ export class Cannon extends GameObject {
   private resetCannon(resetAngle: boolean = true): void {
     if (resetAngle)
       this.barrel.angle = -window.conf.barrelDefaultAngle;
+    this.ammoBar.setAmmo(window.conf.ammoAmount - this.curShots, window.conf.ammoAmount);
     this.power = 0;
     this.isAimed = false;
     this.dragArea.visible = false;
